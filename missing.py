@@ -7,7 +7,8 @@ from os.path import exists
 from os import environ
 
 hook = environ.get('HOOK', "missing")
-team = environ.get('TEAM',"09...xd[^2]")
+team = environ.get('TEAM',"09...xd[^1]")
+link = environ.get('SOURCE',"https://www.ejg.hu/helyettes/")
 
 print(hook)
 print(team)
@@ -18,7 +19,6 @@ if (exists("sent.json")):
     f = open("sent.json", "r")
     sent = json.loads(f.read())
 
-link = "https://www.ejg.hu/helyettes/"
 f = urlopen(link)
 myfile = f.read().decode('utf-8')
 myfile = re.sub(">\n",">",myfile)
@@ -36,6 +36,7 @@ for sor in myfile.splitlines():
 
         embed = {
             "title": "Helyettesítés",
+            "description": match.group(1) +" "+match.group(3)[0:2]+" "+match.group(5)+" "+  match.group(7) +" @everyone",
             "type": "rich",
             "color": 2123412,
             "fields": [
@@ -44,17 +45,16 @@ for sor in myfile.splitlines():
                 {"name": "Terem", "value":match.group(3),"inline":"true"},
                 {"name": "Csoport", "value":match.group(4),"inline":"true"},
                 {"name": "Tantárgy", "value":match.group(5),"inline":"true"},
-                {"name": "Helyettes", "value":match.group(6).replace("&nbsp","-"),"inline":"true"},
-                {"name": "Megjegyzés", "value":match.group(7),"inline":"true"}
+                {"name": "Helyettes", "value":match.group(6).replace("&nbsp","-"),"inline":"true"}
             ],
-            "footer" : {"text":"E5vös helyettesítés info v0.1"}
+            "footer" : {"text":"E5vös helyettesítés info v0.1.1"}
         }
 
         if match.group(6) == "&nbsp":
             embed["title"] = "Elmarad :heart_eyes:"
             embed["color"] = 15844367;
 
-        e = json.dumps({"embeds": [embed] }, indent=2);
+        e = json.dumps({"embeds": [embed]}, indent=2);
         jsondataasbytes = e.encode('utf-8')
         req = Request(
             hook,
