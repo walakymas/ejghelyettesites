@@ -15,8 +15,8 @@ print(team)
 
 sent = []
 newsent = []
-if (exists("sent.json")):
-    f = open("sent.json", "r")
+if (exists("Xsent.json")):
+    f = open("Xsent.json", "r")
     sent = json.loads(f.read())
 
 f = urlopen(link)
@@ -36,7 +36,7 @@ for sor in myfile.splitlines():
 
         embed = {
             "title": "Helyettesítés",
-            "description": match.group(1) +" "+match.group(3)[0:2]+" "+match.group(5)+" "+  match.group(7) +" @everyone",
+            "description": match.group(1) +" "+match.group(3)[0:2]+" "+match.group(5)+" "+  match.group(7),
             "type": "rich",
             "color": 2123412,
             "fields": [
