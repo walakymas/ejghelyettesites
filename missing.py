@@ -4,6 +4,15 @@ from urllib.request import urlopen, Request
 import re
 import json
 from os.path import exists
+from os import environ
+
+hook = environ.get('HOOK', "missing")
+team = environ.get('TEAM',"09...xd[^2]")
+
+print(hook)
+print(team)
+
+exit(0)
 
 sent = []
 newsent = []
@@ -17,7 +26,7 @@ myfile = f.read().decode('utf-8')
 myfile = re.sub(">\n",">",myfile)
 myfile = re.sub("><TR>",">\n<TR>",myfile)
 for sor in myfile.splitlines():
-    match = re.match("<TR><TD[^>]*>([^<]+)<\/TD> *<TD[^>]*>([^<]+)<\/TD> *<TD[^>]*>([^<]+)<\/TD> *<TD[^>]*>(09...xd[^2][^<]+)<\/TD> *<td[^>]*>([^<]+)<\/td> *<TD[^>]*>([^<]+)<\/TD> *<TD[^>]*>([^<]+)<.",sor)
+    match = re.match("<TR><TD[^>]*>([^<]+)<\/TD> *<TD[^>]*>([^<]+)<\/TD> *<TD[^>]*>([^<]+)<\/TD> *<TD[^>]*>("+team+"[^<]+)<\/TD> *<td[^>]*>([^<]+)<\/td> *<TD[^>]*>([^<]+)<\/TD> *<TD[^>]*>([^<]+)<.",sor)
 
     if match:
         key = match.group(1)+":"+match.group(3)
@@ -50,7 +59,7 @@ for sor in myfile.splitlines():
         e = json.dumps({"embeds": [embed] }, indent=2);
         jsondataasbytes = e.encode('utf-8')
         req = Request(
-            "https://discord.com/api/webhooks/1020048655316697199/x17tlxq8SQyo7jZEQMoIVkadD9jD0-v3t-JVNoXQJFPVed_wVP-j8Uravr3O-SU6eDgU",
+            hook,
             headers={
                 "Content-Type": "application/json",
                 "User-Agent": "",
