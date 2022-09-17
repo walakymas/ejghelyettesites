@@ -12,8 +12,6 @@ team = environ.get('TEAM',"09...xd[^2]")
 print(hook)
 print(team)
 
-exit(0)
-
 sent = []
 newsent = []
 if (exists("sent.json")):
