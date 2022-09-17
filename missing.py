@@ -7,7 +7,7 @@ from os.path import exists
 from os import environ
 
 hook = environ.get('HOOK', "missing")
-team = environ.get('TEAM',"09...xd[^1]")
+team = environ.get('TEAM',"09...xd[^2]")
 link = environ.get('SOURCE',"https://www.ejg.hu/helyettes/")
 
 print(hook)
@@ -15,8 +15,8 @@ print(team)
 
 sent = []
 newsent = []
-if (exists("Xsent.json")):
-    f = open("Xsent.json", "r")
+if (exists("sent.json")):
+    f = open("sent.json", "r")
     sent = json.loads(f.read())
 
 f = urlopen(link)
@@ -30,13 +30,21 @@ for sor in myfile.splitlines():
         key = match.group(1)+":"+match.group(3)
 
         newsent.append(key)
+
+        if match.group(4)[7]=='1':
+            t = 'Észak'
+        elif match.group(4)[7]=='2':
+            t = 'Dél'
+        else:
+            t = 'Osztály'
+
         if key in sent:
             print(f"Already sent {key}")
             continue
 
         embed = {
             "title": "Helyettesítés",
-            "description": match.group(1) +" "+match.group(3)[0:2]+" "+match.group(5)+" "+  match.group(7),
+            "description": match.group(1) + " " + match.group(3)[0:2] + " " + t + " " + match.group(5) + " " +  match.group(7),
             "type": "rich",
             "color": 2123412,
             "fields": [
