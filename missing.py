@@ -7,7 +7,7 @@ from os.path import exists
 from os import environ
 
 hook = environ.get('HOOK', "missing")
-team = environ.get('TEAM',"09...xd[^2]")
+team = environ.get('TEAM',"09...xd")
 link = environ.get('SOURCE',"https://www.ejg.hu/helyettes/")
 
 print(hook)
