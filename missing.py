@@ -8,14 +8,10 @@ from os import environ
 
 hook = environ.get('HOOK')
 vibea = environ.get('VIBER')
-#team = environ.get('TEAM',"09(...xd|(an|ol|ne).x)")
-team = environ.get('TEAM',"09(...xd|(an|ol|ne).xcdf)")
+team = environ.get('TEAM',"09(...xd|(an|ol|ne).xcdf|ol2x2ny1)")
 link = environ.get('SOURCE',"https://www.ejg.hu/helyettes/")
 
 debug = not (vibea or hook)
-
-if debug:
-    print("DEBUG MODE")
 
 napok = {
     'h': 'Hétfő',
@@ -47,7 +43,8 @@ orak = {
     'ola': 'Olasz',
     'ang': 'Angol',
     'nem': 'Német',
-    'foc': 'Földrajz'
+    'foc': 'Földrajz',
+    'rvk': 'Vizuális Kultúra'
 }
 
 class Ora:
@@ -62,7 +59,7 @@ class Ora:
         if self.helyettes=='':
             self.helyettes = 'Nincs'
 
-        self.targy = orak.get(match.group(5)[0:3], match.group(5)[0:3])
+        self.targy = orak.get(match.group(5), match.group(5))
 
         if self.csoport[7]=='1':
             self.team = 'Észak'
@@ -72,9 +69,10 @@ class Ora:
             self.team = 'Lány'
         elif self.csoport[2:10]=='tesxdfff':
             self.team = 'Fiú'
+        elif re.match("(an|ol|ne)[12]", match.group(5)):
+            self.team = 'Nyelvi'
         else :
             self.team = 'Osztály'
-
 
         if "online" in match.group(7):
             self.title = "Online"
@@ -99,7 +97,7 @@ class Viber:
                 "auth_token":vibea,
                 "from": "3QbOontxw2C2huap/Lclww==",
                 "type": "text",
-                "text": f"""*{ora.title}* {ora.team} {ora.targy} {ora.nap} {match.group(3)[1:2]}. óra
+                "text": f"""*{ora.title}* {ora.team} {ora.targy} {ora.nap} {ora.terem[1:2]}. óra
 Tanár: {ora.tanar}
 Helyettes: {ora.helyettes}
 {ora.datum} {ora.terem} {ora.megjegyzes}"""
@@ -158,37 +156,44 @@ class Discord:
 
 
 
-sent = []
-newsent = []
-if (exists("sent.json")):
-    f = open("sent.json", "r")
-    sent = json.loads(f.read())
+def main():
+    if debug:
+        print("DEBUG MODE")
 
-f = urlopen(link)
-myfile = f.read().decode('utf-8')
-myfile = re.sub(">\n",">",myfile)
-myfile = re.sub("><TR>",">\n<TR>",myfile)
-for sor in myfile.splitlines():
-    match = re.match("<TR><TD[^>]*>([^<]+)<\/TD> *<TD[^>]*>([^<]+)<\/TD> *<TD[^>]*>([^<]+)<\/TD> *<TD[^>]*>([^<]+)<\/TD> *<td[^>]*>([^<]+)<\/td> *<TD[^>]*>([^<]+)<\/TD> *<TD[^>]*>([^<]+)<.",sor)
+    sent = []
+    newsent = []
 
-    if match :
-        ora = Ora(match)
-        if ora.need():
-            key = match.group(1)+":"+match.group(3)
-            newsent.append(key)
+    if (exists("sent.json")):
+        f = open("sent.json", "r")
+        sent = json.loads(f.read())
 
-            if key in sent:
-                print(f"Already sent {key}")
-                if not debug:
-                    continue
+    f = urlopen(link)
+    myfile = f.read().decode('utf-8')
+    myfile = re.sub(">\n",">",myfile)
+    myfile = re.sub("><TR>",">\n<TR>",myfile)
+    for sor in myfile.splitlines():
+        match = re.match("<TR><TD[^>]*>([^<]+)<\/TD> *<TD[^>]*>([^<]+)<\/TD> *<TD[^>]*>([^<]+)<\/TD> *<TD[^>]*>([^<]+)<\/TD> *<td[^>]*>([^<]+)<\/td> *<TD[^>]*>([^<]+)<\/TD> *<TD[^>]*>([^<]+)<.",sor)
 
-            Discord().send(ora)
-            Viber().send(ora)
+        if match :
+            ora = Ora(match)
+            if ora.need():
+                key = match.group(1)+":"+match.group(3)
+                newsent.append(key)
 
-if not debug:
-    f = open("sent.json", "w")
-    f.write(json.dumps(newsent, indent=2))
-    f.close()
-else:
-    print(json.dumps(newsent, indent=2))
+                if key in sent:
+                    print(f"Already sent {key}")
+                    if not debug:
+                        continue
 
+                Discord().send(ora)
+                Viber().send(ora)
+
+    if not debug:
+        f = open("sent.json", "w")
+        f.write(json.dumps(newsent, indent=2))
+        f.close()
+    else:
+        print(json.dumps(newsent, indent=2))
+
+if __name__ == "__main__":
+    main()

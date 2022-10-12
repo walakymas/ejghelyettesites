@@ -1,6 +1,7 @@
 # Project
 sent.json
 *~
+/missing2.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
