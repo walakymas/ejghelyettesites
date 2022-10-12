@@ -22,7 +22,9 @@ teams = [
 ]
 
 for t in teams:
+    # Megtalálja-e a regexp
     if not re.match(team, t):
         print("Nem illeszkedik:" + t)
+    # Az összes órakódot látjuk-e
     if not t[2:5] in orak:
         print("Missing: "+t[2:5])

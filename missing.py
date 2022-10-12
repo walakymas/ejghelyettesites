@@ -11,8 +11,10 @@ vibea = environ.get('VIBER')
 team = environ.get('TEAM',"09(...xd|(an|ol|ne).xcdf|ol2x2ny1)")
 link = environ.get('SOURCE',"https://www.ejg.hu/helyettes/")
 
+# Ha sem Viber, sem Discord elérés nincs megadva, akkor csak teszteljük a kódot, küldés helyett kiírások
 debug = not (vibea or hook)
 
+# A hét napjai. A terem kódok első karakterei alapján ezt jelenítjük meg.
 napok = {
     'h': 'Hétfő',
     'k': 'Kedd',
@@ -22,6 +24,7 @@ napok = {
     'v': 'Vasárnap'
 }
 
+# Óra kódok. A csoport kód [2:5] része illetve a tárgy a táblázatban
 orak = {
     'ird': 'Irodalom',
     'kem': 'Kémia',
@@ -47,49 +50,67 @@ orak = {
     'rvk': 'Vizuális Kultúra'
 }
 
+# Sikeres mintaillesztés esetén az adatok feldolgozása
 class Ora:
     def __init__(self, match):
-        self.datum = match.group(1)
-        self.tanar = match.group(2)
-        self.terem = match.group(3)
-        self.nap = napok[match.group(3)[0:1]]
         self.csoport = match.group(4)
         self.megjegyzes = match.group(7)
-        self.helyettes = match.group(6).replace("&nbsp","")
-        if self.helyettes=='':
-            self.helyettes = 'Nincs'
+        # Csak akkor dolgozzuk fel, ha team minta illeszkedik ÉS a megjegyzés nem "-megtartja".
+        # Az utóbbira azért van szükség, mert ha valakinek első órája nincs megtartva, akkor a rendszerük automatikusan
+        # felveszi a további óráit mint elmaradó és külön jelezik, hogy az biza meg lesz tartva...
+        self.need = re.match(team, self.csoport) and self.megjegyzes!='-megtartja'
+        if self.need:
+            self.datum = match.group(1)
+            self.tanar = match.group(2)
+            self.terem = match.group(3)
+            # Human readable nap
+            self.nap = napok[match.group(3)[0:1]]
+            self.targykod = match.group(5)
 
-        self.targy = orak.get(match.group(5), match.group(5))
+            # Az oldal kódjának egyik furcsasága, hogy &nbsp szerepel &nbsp; helyett, a böngészők meg automatikusan
+            # javítják megjelenítéskor.
+            self.helyettes = match.group(6).replace("&nbsp","")
+            if self.helyettes=='':
+                self.helyettes = 'Nincs'
 
-        if self.csoport[7]=='1':
-            self.team = 'Észak'
-        elif self.csoport[7]=='2':
-            self.team = 'Dél'
-        elif self.csoport[2:10]=='tesxdfno':
-            self.team = 'Lány'
-        elif self.csoport[2:10]=='tesxdfff':
-            self.team = 'Fiú'
-        elif re.match("(an|ol|ne)[12]", match.group(5)):
-            self.team = 'Nyelvi'
-        else :
-            self.team = 'Osztály'
+            # Human readable tanóra megjelenítés a tárgy kód alapján ha nincs a listában, akkor a tárgykódra fallback
+            self.targy = orak.get(self.targykod, self.targykod)
 
-        if "online" in match.group(7):
-            self.title = "Online"
-            self.emoji = ""
-            self.color = 2135072
-        elif match.group(6) == "&nbsp":
-            self.title = "Elmarad"
-            self.emoji = ""
-            self.color = 15844367
-        else:
-            self.title = "Helyettesítés"
-            self.emoji = ""
-            self.color = 2123412
+            # Team kiokoskodása
+            # - Osztott órák
+            if self.csoport[7]=='1':
+                self.team = 'Észak'
+            elif self.csoport[7]=='2':
+                self.team = 'Dél'
+            # - Testnevelés
+            elif self.csoport[2:10]=='tesxdfno':
+                self.team = 'Lány'
+            elif self.csoport[2:10]=='tesxdfff':
+                self.team = 'Fiú'
+            # - Nyelvi órák (ezeknél nem tudok biztonságosan szűrni arra tényleg érinti-e az osztályt.)
+            elif re.match("(an|ol|ne)[12]", match.group(5)):
+                self.team = 'Nyelvi'
+            # - Egész osztály
+            else :
+                self.team = 'Osztály'
 
-    def need(self):
-        return re.match(team, self.csoport) and self.megjegyzes!='-megtartja'
+            # Amennyiben az órát online tartják
+            if "online" in match.group(7):
+                self.title = "Online"
+                self.emoji = "computer"
+                self.color = 2135072
+            # Amennyiben elmarad (nincs helyettes és nem online)
+            elif match.group(6) == "&nbsp":
+                self.title = "Elmarad"
+                self.emoji = ":heart_eyes:"
+                self.color = 15844367
+            # Van helyettes megadva
+            else:
+                self.title = "Helyettesítés"
+                self.emoji = ""
+                self.color = 2123412
 
+# Küldés Viber channelre annak auth kódjával
 class Viber:
     def send(self, ora:Ora):
         if vibea or debug:
@@ -119,12 +140,12 @@ Helyettes: {ora.helyettes}
                 )
                 urlopen(req)
 
-
+# Küldés Discord Webhook-ra
 class Discord:
     def send(self, ora:Ora):
         if hook!="missing" or debug:
             e = json.dumps({"embeds": [{
-                "title": ora.title,
+                "title": ora.title +" "+ora.emoji,
                 "description": ora.datum + " " + ora.terem[0:2] + " " + ora.team + " " + ora.targy + " " +  ora.megjegyzes,
                 "type": "rich",
                 "color": ora.color,
@@ -176,7 +197,7 @@ def main():
 
         if match :
             ora = Ora(match)
-            if ora.need():
+            if ora.need:
                 key = match.group(1)+":"+match.group(3)
                 newsent.append(key)
 
