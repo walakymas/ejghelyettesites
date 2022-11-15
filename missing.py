@@ -6,13 +6,13 @@ import json
 from os.path import exists
 from os import environ
 
-hook = environ.get('HOOK')
+hooks = environ.get('HOOKS')
 vibea = environ.get('VIBER')
 team = environ.get('TEAM',"09(...xd|(an|ol|ne).xcdf|ol2x2ny1)")
 link = environ.get('SOURCE',"https://www.ejg.hu/helyettes/")
 
 # Ha sem Viber, sem Discord elérés nincs megadva, akkor csak teszteljük a kódot, küldés helyett kiírások
-debug = not (vibea or hook)
+debug = not (vibea or hooks)
 
 # A hét napjai. A terem kódok első karakterei alapján ezt jelenítjük meg.
 napok = {
@@ -143,7 +143,7 @@ Helyettes: {ora.helyettes}
 # Küldés Discord Webhook-ra
 class Discord:
     def send(self, ora:Ora):
-        if hook!="missing" or debug:
+        if hooks or debug:
             e = json.dumps({"embeds": [{
                 "title": ora.title +" "+ora.emoji,
                 "description": ora.datum + " " + ora.terem[0:2] + " " + ora.team + " " + ora.targy + " " +  ora.megjegyzes,
@@ -163,17 +163,18 @@ class Discord:
             if debug:
                 print(e)
             else:
-                req = Request(
-                    hook,
-                    headers={
-                        "Content-Type": "application/json",
-                        "User-Agent": "Python",
-                        "Content-Length": len(jsondataasbytes)
-                    },
-                    data=jsondataasbytes,
-                    method="POST"
-                )
-                urlopen(req)
+                for hook in hooks.split(';'):
+                    req = Request(
+                        hook,
+                        headers={
+                            "Content-Type": "application/json",
+                            "User-Agent": "Python",
+                            "Content-Length": len(jsondataasbytes)
+                        },
+                        data=jsondataasbytes,
+                        method="POST"
+                    )
+                    urlopen(req)
 
 
 
