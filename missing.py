@@ -207,8 +207,15 @@ def main():
                     if not debug:
                         continue
 
-                Discord().send(ora)
-                Viber().send(ora)
+                try:
+                    Discord().send(ora)
+                except Exception as e:
+                    print(e)
+
+                try:
+                    Viber().send(ora)
+                except Exception as e:
+                    print(e)
 
     if not debug:
         f = open("sent.json", "w")
